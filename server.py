@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 import requests
 import time
 
@@ -29,6 +30,21 @@ def cache_get(key):
 
 def cache_set(key, value):
     CACHE[key] = (value, time.time())
+
+
+# 🔥 ПРОКСИ — НОВЫЙ ENDPOINT
+@app.get("/proxy")
+def proxy(url: str = Query(...)):
+    try:
+        r = requests.get(url, timeout=10)
+        return Response(
+            content=r.content,
+            status_code=r.status_code,
+            media_type=r.headers.get("content-type", "application/octet-stream"),
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
+    except Exception as e:
+        return {"error": "Proxy error", "message": str(e)}
 
 
 # Получение данных одного подарка
