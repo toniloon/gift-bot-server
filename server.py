@@ -9,7 +9,7 @@ app = FastAPI()
 # Разрешаем запросы с фронтенда
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # можно ограничить позже
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -32,7 +32,7 @@ def cache_set(key, value):
     CACHE[key] = (value, time.time())
 
 
-# 🔥 ПРОКСИ — НОВЫЙ ENDPOINT
+# 🔥 ПРОКСИ — оставляем как есть
 @app.get("/proxy")
 def proxy(url: str = Query(...)):
     try:
@@ -99,6 +99,36 @@ def get_gift(gift_id: int):
     }
 
 
+# ⭐⭐⭐ НОВЫЙ ГЛАВНЫЙ ENDPOINT — ВСЯ КОЛЛЕКЦИЯ ⭐⭐⭐
+@app.get("/collection/{slug}")
+def get_collection(slug: str):
+    """
+    slug = berrybox / stellarrocket / goldenstar / ...
+    """
+    url = f"https://nft.fragment.com/api/gifts/{slug}/all"
+
+    cached = cache_get(url)
+    if cached:
+        return cached
+
+    try:
+        r = requests.get(url, timeout=10, headers={
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "application/json"
+        })
+
+        if r.status_code != 200:
+            return {"error": "Fragment error", "status": r.status_code}
+
+        data = r.json()
+        cache_set(url, data)
+        return data
+
+    except Exception as e:
+        return {"error": "Server error", "message": str(e)}
+
+
+# ⭐ Оставляем твой старый поиск (он пригодится)
 @app.get("/search")
 def search(
     collection: str = Query("", alias="collection"),
@@ -107,7 +137,6 @@ def search(
     symbol: str = Query("", alias="symbol"),
     number: str = Query("", alias="number"),
 ):
-    # Формируем параметры для Fragment API
     params = {}
 
     if collection:
@@ -121,7 +150,6 @@ def search(
     if number:
         params["number"] = number
 
-    # Если есть номер — ищем только его
     if number:
         gift = fetch_gift(number)
         if not gift:
@@ -134,7 +162,6 @@ def search(
             "symbol": gift.get("symbol"),
         }]
 
-    # Иначе — поиск по фильтрам
     results = search_fragment(params)
 
     output = []
