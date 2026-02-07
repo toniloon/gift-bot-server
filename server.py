@@ -15,7 +15,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Простое кэширование (чтобы не спамить Fragment API)
+# Простое кэширование
 CACHE = {}
 CACHE_TTL = 30  # 30 секунд
 
