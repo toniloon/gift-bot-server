@@ -105,7 +105,8 @@ def get_collection(slug: str):
     """
     slug = berrybox / stellarrocket / goldenstar / ...
     """
-    url = f"https://nft.fragment.com/api/gifts/{slug}/all"
+    # ❗ ПРАВИЛЬНЫЙ fragment API
+    url = f"https://fragment.com/api/v1/gifts?collection={slug}&limit=100000"
 
     cached = cache_get(url)
     if cached:
@@ -121,8 +122,13 @@ def get_collection(slug: str):
             return {"error": "Fragment error", "status": r.status_code}
 
         data = r.json()
-        cache_set(url, data)
-        return data
+
+        # fragment API возвращает объект вида:
+        # { "gifts": [ ... ] }
+        items = data.get("gifts", [])
+
+        cache_set(url, items)
+        return items
 
     except Exception as e:
         return {"error": "Server error", "message": str(e)}
