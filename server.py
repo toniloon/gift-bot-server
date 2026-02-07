@@ -99,7 +99,7 @@ def get_gift(gift_id: int):
     }
 
 
-# ⭐⭐⭐ НОВЫЙ ГЛАВНЫЙ ENDPOINT — ВСЯ КОЛЛЕКЦИЯ ⭐⭐⭐
+# ⭐⭐⭐ ПРАВИЛЬНЫЙ ENDPOINT — ВСЯ КОЛЛЕКЦИЯ ⭐⭐⭐
 @app.get("/collection/{slug}")
 def get_collection(slug: str):
     """
